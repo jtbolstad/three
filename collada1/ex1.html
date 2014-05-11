@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<!-- saved from url=(0083)https://threejsdoc.appspot.com/doc/three.js/examples.source/webgl_collada.html.html -->
+<html><script id="tinyhippos-injected">if (window.top.ripple) { window.top.ripple("bootstrap").inject(window, document); }</script><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>doc/three.js/examples/webgl_collada.html</title>
+  <link rel="stylesheet" type="text/css" href="./ex1_files/github.css">
+  <link rel="stylesheet" type="text/css" href="./ex1_files/find.css">
+  <script src="./ex1_files/highlight.pack.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+  <script src="./ex1_files/find.js"></script>
+</head>
+<body>
+<pre><code class="xml"><span class="doctype">&lt;!doctype html&gt;</span>
+<span class="tag">&lt;<span class="title">html</span> <span class="attribute">lang</span>=<span class="value">"en"</span>&gt;</span>
+	<span class="tag">&lt;<span class="title">head</span>&gt;</span>
+		<span class="tag">&lt;<span class="title">title</span>&gt;</span>three.js webgl - collada<span class="tag">&lt;/<span class="title">title</span>&gt;</span>
+		<span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span>
+		<span class="tag">&lt;<span class="title">meta</span> <span class="attribute">name</span>=<span class="value">"viewport"</span> <span class="attribute">content</span>=<span class="value">"width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"</span>&gt;</span>
+		<span class="tag">&lt;<span class="title">style</span>&gt;</span><span class="css">
+			<span class="tag">body</span> <span class="rules">{
+				<span class="rule"><span class="attribute">font-family</span>:<span class="value"> Monospace</span>;</span>
+				<span class="rule"><span class="attribute">background-color</span>:<span class="value"> <span class="number">#000000</span></span>;</span>
+				<span class="rule"><span class="attribute">margin</span>:<span class="value"> <span class="number">0</span>px</span>;</span>
+				<span class="rule"><span class="attribute">overflow</span>:<span class="value"> hidden</span>;</span>
+			<span class="rule">}</span></span>
+		</span><span class="tag">&lt;/<span class="title">style</span>&gt;</span>
+	<span class="tag">&lt;/<span class="title">head</span>&gt;</span>
+	<span class="tag">&lt;<span class="title">body</span>&gt;</span>
+		<span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"../build/Three.js"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+
+		<span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"js/Detector.js"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+		<span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"js/RequestAnimationFrame.js"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+		<span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"js/Stats.js"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+
+		<span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="javascript">
+
+			<span class="keyword">if</span> ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+			<span class="keyword">var</span> container, stats;
+
+			<span class="keyword">var</span> camera, scene, renderer, objects;
+			<span class="keyword">var</span> particleLight, pointLight;
+			<span class="keyword">var</span> dae, skin;
+
+			<span class="keyword">var</span> loader = <span class="keyword">new</span> THREE.ColladaLoader();
+			loader.load( <span class="string">'./models/monster.dae'</span>, <span class="function"><span class="keyword">function</span> <span class="title">colladaReady</span><span class="params">( collada )</span> {</span>
+
+				dae = collada.scene;
+				skin = collada.skins[ <span class="number">0</span> ];
+
+				dae.scale.x = dae.scale.y = dae.scale.z = <span class="number">0.002</span>;
+				dae.rotation.x = -Math.PI/<span class="number">2</span>;
+				dae.updateMatrix();
+
+				init();
+				animate();
+
+			} );
+
+			<span class="function"><span class="keyword">function</span> <span class="title">init</span><span class="params">()</span> {</span>
+
+				container = document.createElement( <span class="string">'div'</span> );
+				document.body.appendChild( container );
+
+				camera = <span class="keyword">new</span> THREE.PerspectiveCamera( <span class="number">45</span>, window.innerWidth / window.innerHeight, <span class="number">1</span>, <span class="number">2000</span> );
+				camera.position.set( <span class="number">2</span>, <span class="number">2</span>, <span class="number">3</span> );
+
+				scene = <span class="keyword">new</span> THREE.Scene();
+
+				<span class="comment">// Grid</span>
+
+				<span class="keyword">var</span> line_material = <span class="keyword">new</span> THREE.LineBasicMaterial( { color: <span class="number">0xcccccc</span>, opacity: <span class="number">0.2</span> } ),
+					geometry = <span class="keyword">new</span> THREE.Geometry(),
+					floor = -<span class="number">0.04</span>, step = <span class="number">1</span>, size = <span class="number">14</span>;
+
+				<span class="keyword">for</span> ( <span class="keyword">var</span> i = <span class="number">0</span>; i &lt;= size / step * <span class="number">2</span>; i ++ ) {
+
+					geometry.vertices.push( <span class="keyword">new</span> THREE.Vertex( <span class="keyword">new</span> THREE.Vector3( - size, floor, i * step - size ) ) );
+					geometry.vertices.push( <span class="keyword">new</span> THREE.Vertex( <span class="keyword">new</span> THREE.Vector3(   size, floor, i * step - size ) ) );
+
+					geometry.vertices.push( <span class="keyword">new</span> THREE.Vertex( <span class="keyword">new</span> THREE.Vector3( i * step - size, floor, -size ) ) );
+					geometry.vertices.push( <span class="keyword">new</span> THREE.Vertex( <span class="keyword">new</span> THREE.Vector3( i * step - size, floor,  size ) ) );
+
+				}
+
+				<span class="keyword">var</span> line = <span class="keyword">new</span> THREE.Line( geometry, line_material, THREE.LinePieces );
+				scene.add( line );
+
+				<span class="comment">// Add the COLLADA</span>
+
+				scene.add( dae );
+
+				particleLight = <span class="keyword">new</span> THREE.Mesh( <span class="keyword">new</span> THREE.SphereGeometry( <span class="number">4</span>, <span class="number">8</span>, <span class="number">8</span> ), <span class="keyword">new</span> THREE.MeshBasicMaterial( { color: <span class="number">0xffffff</span> } ) );
+				scene.add( particleLight );
+
+				<span class="comment">// Lights</span>
+
+				scene.add( <span class="keyword">new</span> THREE.AmbientLight( <span class="number">0xcccccc</span> ) );
+
+				<span class="keyword">var</span> directionalLight = <span class="keyword">new</span> THREE.DirectionalLight(<span class="comment">/*Math.random() * 0xffffff*/</span><span class="number">0xeeeeee</span> );
+				directionalLight.position.x = Math.random() - <span class="number">0.5</span>;
+				directionalLight.position.y = Math.random() - <span class="number">0.5</span>;
+				directionalLight.position.z = Math.random() - <span class="number">0.5</span>;
+				directionalLight.position.normalize();
+				scene.add( directionalLight );
+
+				pointLight = <span class="keyword">new</span> THREE.PointLight( <span class="number">0xffffff</span>, <span class="number">4</span> );
+				pointLight.position = particleLight.position;
+				scene.add( pointLight );
+
+				renderer = <span class="keyword">new</span> THREE.WebGLRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				container.appendChild( renderer.domElement );
+
+				stats = <span class="keyword">new</span> Stats();
+				stats.domElement.style.position = <span class="string">'absolute'</span>;
+				stats.domElement.style.top = <span class="string">'0px'</span>;
+				container.appendChild( stats.domElement );
+
+			}
+
+			<span class="comment">//</span>
+
+			<span class="keyword">var</span> t = <span class="number">0</span>;
+			<span class="function"><span class="keyword">function</span> <span class="title">animate</span><span class="params">()</span> {</span>
+
+				requestAnimationFrame( animate );
+
+				<span class="keyword">if</span> ( t &gt; <span class="number">30</span> ) t = <span class="number">0</span>;
+
+				<span class="keyword">if</span> ( skin ) {
+
+					<span class="comment">// guess this can be done smarter...</span>
+
+					<span class="comment">// (Indeed, there are way more frames than needed and interpolation is not used at all</span>
+					<span class="comment">//  could be something like - one morph per each skinning pose keyframe, or even less,</span>
+					<span class="comment">//  animation could be resampled, morphing interpolation handles sparse keyframes quite well.</span>
+					<span class="comment">//  Simple animation cycles like this look ok with 10-15 frames instead of 100 ;)</span>
+
+					<span class="keyword">for</span> ( <span class="keyword">var</span> i = <span class="number">0</span>; i &lt; skin.morphTargetInfluences.length; i++ ) {
+
+						skin.morphTargetInfluences[ i ] = <span class="number">0</span>;
+
+					}
+
+					skin.morphTargetInfluences[ Math.floor( t ) ] = <span class="number">1</span>;
+
+					t += <span class="number">0.5</span>;
+
+				}
+
+				render();
+				stats.update();
+
+			}
+
+			<span class="function"><span class="keyword">function</span> <span class="title">render</span><span class="params">()</span> {</span>
+
+				<span class="keyword">var</span> timer = Date.now() * <span class="number">0.0005</span>;
+
+				camera.position.x = Math.cos( timer ) * <span class="number">10</span>;
+				camera.position.y = <span class="number">2</span>;
+				camera.position.z = Math.sin( timer ) * <span class="number">10</span>;
+
+				camera.lookAt( scene.position );
+
+				particleLight.position.x = Math.sin( timer * <span class="number">4</span> ) * <span class="number">3009</span>;
+				particleLight.position.y = Math.cos( timer * <span class="number">5</span> ) * <span class="number">4000</span>;
+				particleLight.position.z = Math.cos( timer * <span class="number">4</span> ) * <span class="number">3009</span>;
+
+				renderer.render( scene, camera );
+
+			}
+
+		</span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+	<span class="tag">&lt;/<span class="title">body</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">html</span>&gt;</span>
+</code></pre>
+
+
+<div class="keyword-box"><input id="keyword"><button>Search</button></div></body></html>
